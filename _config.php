@@ -1,0 +1,3 @@
+<?php
+define('SHOP_DOWNLOADABLE_PATH', dirname(__FILE__));
+define('SHOP_DOWNLOADABLE_FOLDER', basename(SHOP_DOWNLOADABLE_PATH));

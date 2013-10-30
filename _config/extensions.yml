@@ -1,0 +1,7 @@
+---
+Name: shopdownloadableextensions
+---
+Order:
+  extensions:
+    - DownloadableOrder
+

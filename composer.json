@@ -1,0 +1,19 @@
+{
+	"name": "markguinn/silverstripe-shop-downloadable",
+	"description": "Downloadable products for Silverstripe Shop module",
+	"type": "silverstripe-module",
+	"keywords": ["silverstripe", "ecommerce", "shop", "downloads", "electronic delivery", "downloadable"],
+	"license": "MIT",
+	"authors": [{
+		"name": "Mark Guinn",
+		"email": "mark@adaircreative.com",
+		"homepage": "http://github.com/markguinn"
+	}],
+	"extra": {
+		"installer-name": "shop_downloadable"
+	},
+	"require": {
+		"silverstripe/framework": "~3.1",
+		"burnbright/silverstripe-shop": "*"
+	}
+}
