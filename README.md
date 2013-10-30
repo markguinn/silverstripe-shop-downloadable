@@ -28,7 +28,11 @@ Requirements
 Installation
 ------------
 1. `composer require markguinn/silverstripe-shop-downloadable dev-master`
-2. Add Downloadable extension to Product and/or ProductVariation or only to certain subclasses. For example:
+2. Add Downloadable extension to Product and/or ProductVariation or only to certain subclasses.
+3. Run `dev/build?flush`
+4. Go add some files in the CMS (each product will have a "Files" tab)
+
+YML example:
 ```
 Product:
   extensions:
@@ -37,8 +41,6 @@ ProductVariation:
   extensions:
     - Downloadable
 ```
-3. Run `dev/build?flush`
-4. Go add some files in the CMS (each product will have a "Files" tab)
 
 
 File Download Process
@@ -62,7 +64,12 @@ File Download Process
 
 TODO
 ----
-- Translations
+- Fix bugs in Downloadable extension (hardcoded 'true' in methods)
+- Page for all downloads added to AccountsPage
+- Tests
+
+Would be nice but I have no intention of doing the work myself anytime soon:
+- Translatable
 - Time limit on downloads
 - Allow files to be hosted elsewhere? (CDN)
 
