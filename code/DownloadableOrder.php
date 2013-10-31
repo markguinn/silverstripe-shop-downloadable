@@ -46,13 +46,16 @@ class DownloadableOrder extends DataExtension
 
 		foreach ($this->owner->Items() as $item) {
 			$buyable = $item->Buyable();
-			if ($buyable->hasExtension('Downloadable') && $buyable->HasDownloads()) {
+			if ($buyable && $buyable->exists() && $buyable->hasExtension('Downloadable') && $buyable->HasDownloads()) {
 				foreach ($buyable->DownloadableFiles() as $file) {
 					$downloads->push(new ArrayData(array(
-						'Product'   => $buyable,
-						'File'      => $file,
-						'Order'     => $this->owner,
-						'Link'      => DownloadLink::find_or_make($file->ID, $this->owner->ID),
+						'Product'       => $buyable,
+						'File'          => $file,
+						'Order'         => $this->owner,
+						'Filename'      => $file->Name,
+						'PurchaseDate'  => $this->owner->Placed,
+						'Size'          => $file->getAbsoluteSize(),
+						'Link'          => DownloadLink::find_or_make($file->ID, $this->owner->ID),
 					)));
 				}
 			}

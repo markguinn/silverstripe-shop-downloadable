@@ -4,4 +4,7 @@ Name: shopdownloadableextensions
 Order:
   extensions:
     - DownloadableOrder
+AccountPage_Controller:
+  extensions:
+    - DownloadableAccountPageController
 

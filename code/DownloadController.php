@@ -27,13 +27,12 @@ class DownloadController extends Page_Controller
 		$files   = array();
 
 		// check inputs - should we respond more intelligently if they just didn't check anything?
-		if (empty($orderID) || empty($hashes)) $this->httpError(404);
+		if (empty($hashes)) $this->httpError(404);
 
 		// grab a list of file objects
 		foreach ($hashes as $hash) {
 			$link = DownloadLink::get_by_hash($hash);
 			if ($link && $link->exists()) {
-				if ($link->OrderID != $orderID) $this->httpError(403); // this probably means someone is tampering
 				$file = $link->File();
 				if ($file && $file->exists()) {
 					$files[] = $file;
@@ -48,7 +47,7 @@ class DownloadController extends Page_Controller
 		if ($existingFile && $existingFile->exists()) {
 			if ($existingFile->ProcessingState == DownloadTempFile::COMPLETE) {
 				$this->addToLog($orderID, $files, $existingFile);
-				$this->sendFile($existingFile);
+				return $this->sendTempFile($existingFile);
 			} else {
 				return $this->displayCrunchingPage($existingFile);
 			}
@@ -78,9 +77,7 @@ class DownloadController extends Page_Controller
 				// in the background and in the meantime we refreshed or something
 				// so just send them the file.
 				$this->addToLog(Session::get('DownloadableProcessingOrderID'), $file->SourceFiles(), $file);
-				$file->LastUsedAt = date('Y-m-d H:i:s');
-				$file->write();
-				return $this->redirect($file->Link());
+				return $this->sendTempFile($file);
 			break;
 
 			case DownloadTempFile::ACTIVE:
@@ -97,9 +94,7 @@ class DownloadController extends Page_Controller
 				ini_set('max_execution_time', 0);
 				$file->process();
 				$this->addToLog(Session::get('DownloadableProcessingOrderID'), $file->SourceFiles(), $file);
-				$file->LastUsedAt = date('Y-m-d H:i:s');
-				$file->write();
-				return $this->redirect($file->Link());
+				return $this->sendTempFile($file);
 		}
 	}
 
@@ -149,11 +144,6 @@ class DownloadController extends Page_Controller
 		header('Content-Type: application/octet-stream');
 		header('Content-Disposition: attachment; filename="' . $file->Name . '"');
 
-		if ($file->hasField('LastUsedAt')) {
-			$file->LastUsedAt = date('Y-m-d H:i:s');
-			$file->write();
-		}
-
 		if (Config::inst()->get('Downloadable', 'use_xsendfile')) {
 			header('X-Sendfile: ' . $file->getURL());
 		} else {
@@ -162,6 +152,27 @@ class DownloadController extends Page_Controller
 		}
 
 		exit();
+	}
+
+
+	/**
+	 * Sends the temp file in a safe way for large files.
+	 * If X-sendfile is enabled it uses that, otherwise it uses a
+	 * redirect. This is safe because the temp files all have random
+	 * names and will be deleted within a few days.
+	 *
+	 * @param DownloadTempFile $file
+	 * @return SS_HTTPResponse
+	 */
+	protected function sendTempFile(DownloadTempFile $file) {
+		$file->LastUsedAt = date('Y-m-d H:i:s');
+		$file->write();
+
+		if (Config::inst()->get('Downloadable', 'use_xsendfile')) {
+			$this->sendFile($file);
+		} else {
+			return $this->redirect($file->Link());
+		}
 	}
 
 
