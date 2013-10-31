@@ -10,13 +10,13 @@ and remain available on the user's account pages.
 
 Requirements
 ------------
-- Can be applied to a Product or ProductVariation or both
+- Can be applied to a Product or ProductVariation or both (FAIL: ProductVariation is currently untested)
 	* If a variation is purchased, all files from both variation and main product
-	  become available for download.
+	  become available for download. (FAIL)
 - Any number and type of file can be associated with a Product
 - Downloads are available immediately on receipt screen if paying by credit card
 - Downloads are available on the order history
-- All historical downloads are available from a central screen in the account area
+- All historical downloads are available from a central screen in the account area (FAIL)
 - Can download files individually or any combination in a zip archive
 	* We should keep the zip files around for a few days so we don't recreate them all the time
 	* Cron job to delete old files
@@ -64,8 +64,8 @@ File Download Process
 
 TODO
 ----
-- Fix bugs in Downloadable extension (hardcoded 'true' in methods)
 - Page for all downloads added to AccountsPage
+- Verify works with ProductVariation
 - Tests
 
 Would be nice but I have no intention of doing the work myself anytime soon:

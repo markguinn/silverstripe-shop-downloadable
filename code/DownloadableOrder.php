@@ -12,8 +12,21 @@ class DownloadableOrder extends DataExtension
 	 * @return bool
 	 */
 	public function HasDownloads() {
-		// TODO
-		return true;
+		if (!isset($this->owner->_hasDownloads)) {
+			$items = $this->owner->Items();
+			$this->hasDownloads = false;
+			foreach ($items as $item) {
+				$buyable = $item->Buyable();
+				if ($buyable && $buyable->exists() && $buyable->hasExtension('Downloadable')) {
+					if ($buyable->HasDownloads()) {
+						$this->owner->_hasDownloads = true;
+						break;
+					}
+				}
+			}
+		}
+
+		return $this->owner->_hasDownloads;
 	}
 
 
@@ -21,8 +34,7 @@ class DownloadableOrder extends DataExtension
 	 * @return bool
 	 */
 	public function DownloadsAvailable() {
-		// TODO
-		return true; //$this->HasDownloads() && $this->owner->IsPaid();
+		return $this->HasDownloads() && $this->owner->IsPaid();
 	}
 
 
