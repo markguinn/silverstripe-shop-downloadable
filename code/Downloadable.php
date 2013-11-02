@@ -23,7 +23,7 @@ class Downloadable extends DataExtension
 	private static $download_link_base  = 'downloads';
 
 	/** @var string - anything below this will be passed on directly via readfile or x-sendfile with no temp file created */
-	private static $small_file_size     = '2G';
+	private static $small_file_size     = '100M';
 
 	/** @var bool - use the X-Sendfile header instead of readfile, must have mod_xsendfile (or equivalent) installed */
 	private static $use_xsendfile       = false;

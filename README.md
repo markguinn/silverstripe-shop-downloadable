@@ -7,9 +7,14 @@ Allows Products and/or ProductVariations to have files attached
 that the customer can download once the product has been purchased
 and remain available on the user's account pages.
 
-
 Requirements
 ------------
+- Silverstripe 3.1+ (may work with 3.0, but hasn't been tested)
+- Shop Module 1.0 branch
+- ZipArchive must be enabled in php for full functionality
+
+Features
+--------
 - Can be applied to a Product or ProductVariation or both (FAIL: ProductVariation is currently untested)
 	* If a variation is purchased, all files from both variation and main product
 	  become available for download. (FAIL)
@@ -50,16 +55,30 @@ File Download Process
 2. The link a user clicks is something like "http://example.com/downloads/SHA1HASH", which hits the DownloadController.
 	* Hash is repeatable given an order ID and file ID (so it will work in emails too)
 	* This step could also include a form submission with multiple files.
-3. DownloadController logs the download. If it's only for a single file and the file is small (default 10MB, but
-   configurable via yml) it will just output the mime type and use fpassthru to immediately initiate the download. If there
+3. DownloadController logs the download. If it's only for a single file and the file is small (default 100M, but
+   configurable via yml) it will just output the mime type and use readfile to immediately initiate the download. If there
    is more than one file or if it's a large file, a temporary "Please wait" page will be displayed while the file is copied
    and/or zipped if more than one.
     * The temporary file will be cached in such a way that it can be re-used until it is deleted by a cron job.
     * The text of the temporary page can be taken from any page in the CMS via yml config
-    * If one wants to disable the "passthru" behaviour entirely it can be easily done by setting the "small file" limit to 0.
-    * Can require a login if desired (via config)
+    * If one wants to disable the "pass through" behaviour entirely it can be easily done by setting the small_file_size to 0.
+    * Supports X-Sendfile on servers that have it turned on. In such a case one could probably just set the small_file_size
+      very very high since the file will never be in memory.
 4. If the temporary page is displayed, it will immediately redirect to another URL that will start the copy/zip task
 5. When the copy/zip task is complete it will redirect to the actual url of the temporary file
+
+
+Configuration (YML options on Downloadable class)
+-------------------------------------------------
+- tab_name:             name of the tab for files in the CMS (default: Downloads)
+- source_folder:        where are these files uploaded by default in the cms (default: product-files)
+- zip_folder:           location of temporary zip files and large file copies (default: temp-order-files)
+- download_link_base:   URL segment for links - e.g. http://example.com/downloads/filekey (default: downloads)
+- small_file_size:      anything below this will be passed on directly via readfile or x-sendfile with no temp file created (default: 100M)
+- use_xsendfile:        use the X-Sendfile header instead of readfile, must have mod_xsendfile (or equivalent) installed (default: false)
+- crunching_page:       url segment/path of a page to display instead of the default while copying/zipping files
+- crunching_zombie_window: how many minutes before crunching is restarted on a zip file (default: 5)
+- delete_temp_files_after: how many hours before the temp files are ok to delete (default: 48)
 
 
 TODO
