@@ -38,7 +38,7 @@ class DownloadableAccountPageController extends Extension
 				$sort = key($sortOptions);
 			}
 
-			$sortControl = new DropdownField('sort', 'Sort By:', $sortOptions, $sort);
+			$sortControl = new DropdownField('download-sort', 'Sort By:', $sortOptions, $sort);
 		} else {
 			$sort = 'PurchaseDate';
 			$sortControl = '';
@@ -62,4 +62,13 @@ class DownloadableAccountPageController extends Extension
 			'Downloads'     => $downloads->sort($sort),
 		);
 	}
+
+	
+	/**
+	 * @return string
+	 */
+	public function DownloadZipLink() {
+		return Config::inst()->get('Downloadable', 'download_link_base') . '/zip';
+	}
+
 }

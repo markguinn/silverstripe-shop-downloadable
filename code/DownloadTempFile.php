@@ -128,3 +128,4 @@ class DownloadTempFile extends File
 		return (time() > $ts + $window);
 	}
 }
+

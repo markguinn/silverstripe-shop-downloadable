@@ -6,7 +6,7 @@
 (function ($, window, document, undefined) {
 	'use strict';
 	$(function(){
-		$('form.downloable-files-form select[name=sort]').on('change', function(){
+		$('#download-sort').on('change', function(){
 			document.location.search = '?sort=' + $(this).val();
 		});
 	});

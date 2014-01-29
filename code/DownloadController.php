@@ -141,6 +141,15 @@ class DownloadController extends Page_Controller
 	 * @param File $file
 	 */
 	protected function sendFile(File $file) {
+		// this is for optional compatibility with markguinn/silverstripe-cloudassets
+		if ($file->hasExtension('CloudFileExtension') && $file->CloudStatus === 'Live') {
+			if ($bucket = $file->getCloudBucket()) {
+				header('Location: ' . $bucket->getTemporaryLinkFor($file));
+				exit;
+			}
+		}
+
+		// this is the normal way to send the files
 		header('Content-Type: application/octet-stream');
 		header('Content-Disposition: attachment; filename="' . $file->Name . '"');
 
@@ -151,7 +160,7 @@ class DownloadController extends Page_Controller
 			readfile($file->getFullPath());
 		}
 
-		exit();
+		exit;
 	}
 
 
