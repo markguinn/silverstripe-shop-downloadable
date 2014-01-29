@@ -54,10 +54,10 @@ class CloudDownloadTempFile extends DownloadTempFile
 		// Do the stuff
 		$files = $this->SourceFiles();
 		if ($files->count() == 1) {
-			$src = $files->first()->getFullPath();
+			$src = $files->first();
 			$src->downloadFromCloud();
-			$r = copy($src, $this->getFullPath());
-			if (!$r) throw new Exception("Unable to copy $src to " . $this->getFullPath());
+			$r = copy($src->getFullPath(), $this->getFullPath());
+			if (!$r) throw new Exception("Unable to copy {$src->getFullPath()} to " . $this->getFullPath());
 			$src->convertToPlaceholder();
 		} else {
 			$zip = new ZipArchive();
