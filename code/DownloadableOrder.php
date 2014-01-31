@@ -41,13 +41,13 @@ class DownloadableOrder extends DataExtension
 	/**
 	 * @return ArrayList
 	 */
-	public function Downloads() {
+	public function getDownloads() {
 		$downloads = new ArrayList();
 
 		foreach ($this->owner->Items() as $item) {
 			$buyable = $item->Buyable();
 			if ($buyable && $buyable->exists() && $buyable->hasExtension('Downloadable') && $buyable->HasDownloads()) {
-				foreach ($buyable->DownloadableFiles() as $file) {
+				foreach ($buyable->getDownloads() as $file) {
 					$downloads->push(new ArrayData(array(
 						'Product'       => $buyable,
 						'File'          => $file,

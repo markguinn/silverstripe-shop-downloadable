@@ -38,8 +38,18 @@ class Downloadable extends DataExtension
 	private static $delete_temp_files_after = 48;
 
 
+	private static $db = array(
+		'IncludeParentDownloads'    => 'Boolean',
+		'IncludeChildDownloads'     => 'Boolean',
+	);
+
+	private static $defaults = array(
+		'IncludeParentDownloads'    => true,
+		'IncludeChildDownloads'     => true,
+	);
+
 	private static $many_many = array(
-		'DownloadableFiles' => 'File',
+		'DownloadableFiles'         => 'File',
 	);
 
 
@@ -47,19 +57,78 @@ class Downloadable extends DataExtension
 	 * @param FieldList $fields
 	 */
 	public function updateCMSFields(FieldList $fields) {
-		$tab = Config::inst()->get('Downloadable', 'tab_name');
-		$upload = UploadField::create('DownloadableFiles', '')
-			->setFolderName( Config::inst()->get('Downloadable', 'source_folder') );
-		$fields->addFieldToTab("Root.$tab", $upload);
+		$tabName    = Config::inst()->get('Downloadable', 'tab_name');
+		$tabFields  = array();
+
+		$upload     = new UploadField('DownloadableFiles', '');
+		$upload->setFolderName( Config::inst()->get('Downloadable', 'source_folder') );
+		$tabFields[] = $upload;
+
+		// For certain types of products, it makes sense to include downloads
+		// from parent (ProductVariation) or child products (GroupedProduct)
+		// NOTE: there could be better ways to do this that don't involve checking
+		// for specific classes. The advantage here is that the fields show up
+		// even if the product has not yet been saved or doesn't yet have a
+		// parent or child products.
+		$p = $this->owner instanceof ProductVariation ? $this->owner->Product() : $this->owner->Parent();
+		if ($p && $p->exists() && $p->hasExtension('Downloadable')) {
+			$tabFields[] = new CheckboxField('IncludeParentDownloads', 'Include downloads from parent product in purchase');
+		} elseif (class_exists('GroupedProduct') && $this->owner instanceof GroupedProduct) {
+			$tabFields[] = new CheckboxField('IncludeChildDownloads', 'Include downloads from child products in purchase');
+		}
+
+		// this will just add unnecessary queries slowing down the page load
+		//$tabFields[] = new LiteralField('DownloadCount', '<p>Total Downloads: <strong>' . $this->owner->getDownloads()->count() . '</strong></p>');
+
+		// Product variations don't have tabs, so we need to be able
+		// to handle either case.
+		if ($fields->first() instanceof TabSet) {
+			$fields->addFieldsToTab("Root.$tabName", $tabFields);
+		} else {
+			$fields->push(new HeaderField('DownloadsHeader', $tabName));
+			foreach ($tabFields as $f) $fields->push($f);
+		}
+	}
+
+
+	/**
+	 * @return bool
+	 */
+	public function HasDownloads() {
+		return $this->owner->getDownloads()->count() > 0;
 	}
 
 
 	/**
 	 * TODO: this should take into account products and variations
-	 * @return bool
+	 * @return SS_List
 	 */
-	public function HasDownloads() {
-		return $this->owner->DownloadableFiles()->count() > 0;
+	public function getDownloads() {
+		if (!isset($this->_downloads)) {
+			if ($this->owner->IncludeParentDownloads || $this->owner->IncludeChildDownloads) {
+				$files = new ArrayList();
+				$files->merge( $this->owner->DownloadableFiles() );
+
+				if ($this->owner->IncludeParentDownloads) {
+					$p = $this->owner instanceof ProductVariation ? $this->owner->Product() : $this->owner->Parent();
+					if ($p && $p->exists() && $p->hasExtension('Downloadable')) $files->merge( $p->getDownloads() );
+				}
+
+				if ($this->owner->IncludeChildDownloads) {
+					$kids = $this->owner->hasMethod('ChildProducts') ? $this->owner->ChildProducts() : $this->owner->Children();
+					foreach ($kids as $kid) {
+						if ($kid->hasExtension('Downloadable')) $files->merge( $kid->getDownloads() );
+					}
+				}
+
+				$this->_downloads = $files;
+			} else {
+				$this->_downloads = $this->owner->DownloadableFiles();
+			}
+		}
+
+		return $this->_downloads;
 	}
+	protected $_downloads;
 
 }

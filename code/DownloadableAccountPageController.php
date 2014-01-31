@@ -48,7 +48,7 @@ class DownloadableAccountPageController extends Extension
 		$orders = $member->getPastOrders();
 		if (!empty($orders)) {
 			foreach ($orders as $order) {
-				$downloads->merge( $order->Downloads() );
+				$downloads->merge( $order->getDownloads() );
 			}
 		}
 

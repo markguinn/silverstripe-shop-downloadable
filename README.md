@@ -7,17 +7,19 @@ Allows Products and/or ProductVariations to have files attached
 that the customer can download once the product has been purchased
 and remain available on the user's account pages.
 
+
 Requirements
 ------------
 - Silverstripe 3.1+ (may work with 3.0, but hasn't been tested)
-- Shop Module 1.0 branch
+- Shop Module 1.0 or master branch
 - ZipArchive must be enabled in php for full functionality
+
 
 Features
 --------
-- Can be applied to a Product or ProductVariation or both (COMING SOON: ProductVariation is currently untested)
+- Can be applied to a Product or ProductVariation or both
 	* If a variation is purchased, all files from both variation and main product
-	  become available for download. (COMING SOON)
+	  become available for download (can be overridden from the cms).
 - Any number and type of file can be associated with a Product
 - Downloads are available immediately on receipt screen if paying by credit card
 - Downloads are available on the order history
@@ -28,6 +30,7 @@ Features
 - Download links should not be guessable
 - Download links should be different for each customer/order for the same file
 - Downloads should be logged
+- Compatible with markguinn/silverstripe-cloudassets module for storing downloads on CDN
 
 
 Installation
@@ -83,13 +86,11 @@ Configuration (YML options on Downloadable class)
 
 TODO
 ----
-- Verify works with ProductVariation
 - Tests
 
 Would be nice but I have no intention of doing the work myself anytime soon:
 - Translatable
 - Time limit on downloads
-- Allow files to be hosted elsewhere? (CDN)
 
 
 Developer(s)
