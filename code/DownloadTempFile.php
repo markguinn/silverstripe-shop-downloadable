@@ -127,5 +127,33 @@ class DownloadTempFile extends File
 		$window = Config::inst()->get('Downloadable', 'delete_temp_files_after') * 60 * 60;
 		return (time() > $ts + $window);
 	}
+
+
+	/**
+	 * Returns a more user-friendly filename for use when forcing a download.
+	 * For single files it uses the original file's name.
+	 * For zip files it uses 'order<NUM>-<COUNT>files-YYYY-mm-dd'
+	 * @return string
+	 */
+	public function getFriendlyName() {
+		$files = $this->SourceFiles();
+		if ($files->count() == 1) {
+			return $files->first()->Name;
+		} else {
+			$name = array();
+
+			$links = DownloadLink::get()->filter('FileID', $this->ID);
+			if ($links->count() == 1 && $links->first()->OrderID > 0) {
+				$name[] = 'order' . $links->first()->Order()->Reference;
+			}
+
+			$name[] = $files->count() . 'files';
+			$name[] = date('Y-m-d');
+			$name[] = date('H:i:s');
+
+			return implode('_', $name) . '.zip';
+		}
+	}
+
 }
 

@@ -100,7 +100,6 @@ class Downloadable extends DataExtension
 
 
 	/**
-	 * TODO: this should take into account products and variations
 	 * @return SS_List
 	 */
 	public function getDownloads() {

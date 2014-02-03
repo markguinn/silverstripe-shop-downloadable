@@ -81,4 +81,5 @@ class CloudDownloadTempFile extends DownloadTempFile
 		$this->ProcessingState = self::COMPLETE;
 		$this->write();
 	}
+
 }

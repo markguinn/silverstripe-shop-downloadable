@@ -42,20 +42,8 @@ class DownloadController extends Page_Controller
 
 		if (count($files) == 0) $this->httpError(404);
 
-		// is there already an existing temp file for this combination?
-		$existingFile = DownloadTempFile::get_by_files($files);
-		if ($existingFile && $existingFile->exists()) {
-			if ($existingFile->ProcessingState == DownloadTempFile::COMPLETE) {
-				$this->addToLog($orderID, $files, $existingFile);
-				return $this->sendTempFile($existingFile);
-			} else {
-				return $this->displayCrunchingPage($existingFile);
-			}
-		}
-
 		// display a temporary loading page and start processing the zip
-		Session::set('DownloadableProcessingOrderID', $orderID);
-		return $this->initiateOfflineProcessing($files);
+		return $this->initiateOfflineProcessing($files, $orderID);
 	}
 
 
@@ -125,9 +113,7 @@ class DownloadController extends Page_Controller
 			$this->addToLog($order->ID, $file);
 			$this->sendFile($file);
 		} else {
-			// this will get logged when crunching is complete
-			Session::set('DownloadableProcessingOrderID', $order->ID);
-			return $this->initiateOfflineProcessing(array($file));
+			return $this->initiateOfflineProcessing(array($file), $order->ID);
 		}
 	}
 
@@ -185,9 +171,24 @@ class DownloadController extends Page_Controller
 
 	/**
 	 * @param array $files
+	 * @param int $orderID
 	 * @return HTMLText
 	 */
-	protected function initiateOfflineProcessing(array $files) {
+	protected function initiateOfflineProcessing(array $files, $orderID) {
+		// is there already an existing temp file for this combination?
+		$existingFile = DownloadTempFile::get_by_files($files);
+		if ($existingFile && $existingFile->exists()) {
+			if ($existingFile->ProcessingState === DownloadTempFile::COMPLETE) {
+				$this->addToLog($orderID, $files, $existingFile);
+				return $this->sendTempFile($existingFile);
+			} else {
+				return $this->displayCrunchingPage($existingFile);
+			}
+		}
+
+		// this will get logged when crunching is complete
+		Session::set('DownloadableProcessingOrderID', $orderID);
+
 		// Create an empty DownloadTempFile
 		$parent = Folder::find_or_make(Config::inst()->get('Downloadable', 'zip_folder'));
 		$dl = new DownloadTempFile();
