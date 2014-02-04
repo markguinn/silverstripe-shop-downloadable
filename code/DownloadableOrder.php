@@ -31,10 +31,17 @@ class DownloadableOrder extends DataExtension
 
 
 	/**
+	 * Are downloads present and is the order in a state where downloads
+	 * would be available to the customer (i.e. paid for)?
 	 * @return bool
 	 */
 	public function DownloadsAvailable() {
-		return $this->HasDownloads() && $this->owner->IsPaid();
+		// this gives another hook for application-specific logic (e.g. allowing partial payments)
+		if ($this->owner->hasMethod('canDownload')) {
+			return $this->owner->canDownload();
+		} else {
+			return $this->HasDownloads() && $this->owner->IsPaid();
+		}
 	}
 
 
@@ -62,6 +69,29 @@ class DownloadableOrder extends DataExtension
 		}
 
 		return $downloads;
+	}
+
+
+	/**
+	 * Returns the total of products that contain downloads
+	 * @return float
+	 */
+	public function getDownloadsTotal() {
+		$result = 0.0;
+
+		if ($items = $this->owner->Items()) {
+			foreach ($items as $item) {
+				if ($buyable = $item->Buyable()) {
+					if ($buyable->hasExtension('Downloadable')) {
+						if ($buyable->HasDownloads()) {
+							$result += $item->Total();
+						}
+					}
+				}
+			}
+		}
+
+		return $result;
 	}
 
 
