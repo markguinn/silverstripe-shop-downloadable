@@ -100,9 +100,11 @@ class Downloadable extends DataExtension
 
 
 	/**
+	 * @param array $blacklist [optional] - list of id's to blacklist (only used internally for avoiding endless loops)
 	 * @return SS_List
 	 */
-	public function getDownloads() {
+	public function getDownloads($blacklist=array()) {
+		$blacklist[$this->owner->ID] = $this->owner->ID;
 		if (!isset($this->_downloads)) {
 			if ($this->owner->IncludeParentDownloads || $this->owner->IncludeChildDownloads) {
 				$files = new ArrayList();
@@ -110,13 +112,17 @@ class Downloadable extends DataExtension
 
 				if ($this->owner->IncludeParentDownloads) {
 					$p = $this->owner instanceof ProductVariation ? $this->owner->Product() : $this->owner->Parent();
-					if ($p && $p->exists() && $p->hasExtension('Downloadable')) $files->merge( $p->getDownloads() );
+					if ($p && $p->exists() && $p->hasExtension('Downloadable') && !isset($blacklist[$p->ID])) {
+						$files->merge( $p->getDownloads($blacklist) );
+					}
 				}
 
 				if ($this->owner->IncludeChildDownloads) {
 					$kids = $this->owner->hasMethod('ChildProducts') ? $this->owner->ChildProducts() : $this->owner->Children();
 					foreach ($kids as $kid) {
-						if ($kid->hasExtension('Downloadable')) $files->merge( $kid->getDownloads() );
+						if ($kid->hasExtension('Downloadable') && !isset($blacklist[$kid->ID])) {
+							$files->merge( $kid->getDownloads($blacklist) );
+						}
 					}
 				}
 
