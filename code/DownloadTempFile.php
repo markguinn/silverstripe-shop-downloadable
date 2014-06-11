@@ -66,7 +66,7 @@ class DownloadTempFile extends File
 	 * @return string
 	 */
 	public function getProcessingLink() {
-		return Config::inst()->get('Downloadable', 'download_link_base') . '/process/' . $this->ID;
+		return Director::absoluteURL( Config::inst()->get('Downloadable', 'download_link_base') . '/process/' . $this->ID );
 	}
 
 
