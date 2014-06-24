@@ -40,6 +40,7 @@ class DownloadableOrder extends DataExtension
 		if ($this->owner->hasMethod('canDownload')) {
 			return $this->owner->canDownload();
 		} else {
+            if ($this->owner->Status == 'AdminCancelled' || $this->owner->Status == 'MemberCancelled') return false;
 			return $this->HasDownloads() && $this->owner->IsPaid();
 		}
 	}
