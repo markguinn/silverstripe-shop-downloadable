@@ -111,14 +111,28 @@ class Downloadable extends DataExtension
 				$files->merge( $this->owner->DownloadableFiles() );
 
 				if ($this->owner->IncludeParentDownloads) {
-					$p = $this->owner instanceof ProductVariation ? $this->owner->Product() : $this->owner->Parent();
+                    if ($this->owner instanceof ProductVariation) {
+                        $p = $this->owner->Product();
+                    } elseif ($this->owner->hasMethod('Parent')) {
+                        $p = $this->owner->Parent();
+                    } else {
+                        $p = null;
+                    }
+
 					if ($p && $p->exists() && $p->hasExtension('Downloadable') && !isset($blacklist[$p->ID])) {
 						$files->merge( $p->getDownloads($blacklist) );
 					}
 				}
 
 				if ($this->owner->IncludeChildDownloads) {
-					$kids = $this->owner->hasMethod('ChildProducts') ? $this->owner->ChildProducts() : $this->owner->Children();
+					if ($this->owner->hasMethod('ChildProducts')) {
+                        $kids = $this->owner->ChildProducts();
+                    } elseif ($this->owner->hasMethod('Children')) {
+                        $kids = $this->owner->Children();
+                    } else {
+                        $kids = array();
+                    }
+
 					foreach ($kids as $kid) {
 						if ($kid->hasExtension('Downloadable') && !isset($blacklist[$kid->ID])) {
 							$files->merge( $kid->getDownloads($blacklist) );
