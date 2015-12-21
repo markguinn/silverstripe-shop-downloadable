@@ -9,77 +9,87 @@
  */
 class CloudDownloadTempFile extends DownloadTempFile
 {
-	public function Link() {
-		$this->createLocalIfNeeded();
-		return $this->CloudStatus == 'Live' ? $this->getCloudURL() : parent::Link();
-	}
+    public function Link()
+    {
+        $this->createLocalIfNeeded();
+        return $this->CloudStatus == 'Live' ? $this->getCloudURL() : parent::Link();
+    }
 
-	public function RelativeLink() {
-		$this->createLocalIfNeeded();
-		return $this->CloudStatus == 'Live' ? $this->getCloudURL() : parent::RelativeLink();
-	}
+    public function RelativeLink()
+    {
+        $this->createLocalIfNeeded();
+        return $this->CloudStatus == 'Live' ? $this->getCloudURL() : parent::RelativeLink();
+    }
 
-	public function getURL() {
-		$this->createLocalIfNeeded();
-		return $this->CloudStatus == 'Live' ? $this->getCloudURL() : parent::getURL();
-	}
+    public function getURL()
+    {
+        $this->createLocalIfNeeded();
+        return $this->CloudStatus == 'Live' ? $this->getCloudURL() : parent::getURL();
+    }
 
-	public function getAbsoluteURL() {
-		$this->createLocalIfNeeded();
-		return $this->CloudStatus == 'Live' ? $this->getCloudURL() : parent::getAbsoluteURL();
-	}
+    public function getAbsoluteURL()
+    {
+        $this->createLocalIfNeeded();
+        return $this->CloudStatus == 'Live' ? $this->getCloudURL() : parent::getAbsoluteURL();
+    }
 
-	public function getAbsoluteSize() {
-		$this->createLocalIfNeeded();
-		return $this->CloudStatus == 'Live' ? $this->CloudSize : parent::getAbsoluteSize();
-	}
+    public function getAbsoluteSize()
+    {
+        $this->createLocalIfNeeded();
+        return $this->CloudStatus == 'Live' ? $this->CloudSize : parent::getAbsoluteSize();
+    }
 
-	public function exists() {
-		$this->createLocalIfNeeded();
-		return parent::exists();
-	}
+    public function exists()
+    {
+        $this->createLocalIfNeeded();
+        return parent::exists();
+    }
 
-	/**
-	 * Copies and/or zips the file(s) into the correct temporary folder.
-	 * NOTE: there could possibly be some ways to avoid downloading and
-	 * re-uploading the content for single files.
-	 * @throws Exception
-	 */
-	public function process() {
-		// Change to active
-		$this->ProcessingState = self::ACTIVE;
-		$this->ProcessingStartedAt = date('Y-m-d H:i:s');
-		$this->write();
+    /**
+     * Copies and/or zips the file(s) into the correct temporary folder.
+     * NOTE: there could possibly be some ways to avoid downloading and
+     * re-uploading the content for single files.
+     * @throws Exception
+     */
+    public function process()
+    {
+        // Change to active
+        $this->ProcessingState = self::ACTIVE;
+        $this->ProcessingStartedAt = date('Y-m-d H:i:s');
+        $this->write();
 
-		// Do the stuff
-		$files = $this->SourceFiles();
-		if ($files->count() == 1) {
-			$src = $files->first();
-			$src->downloadFromCloud();
-			$r = copy($src->getFullPath(), $this->getFullPath());
-			if (!$r) throw new Exception("Unable to copy {$src->getFullPath()} to " . $this->getFullPath());
-			$src->convertToPlaceholder();
-		} else {
-			$zip = new ZipArchive();
-			$r = $zip->open($this->getFullPath(), ZipArchive::CREATE);
-			if ($r !== true) throw new Exception("Unable to create zip file at " . $this->getFullPath());
+        // Do the stuff
+        $files = $this->SourceFiles();
+        if ($files->count() == 1) {
+            $src = $files->first();
+            $src->downloadFromCloud();
+            $r = copy($src->getFullPath(), $this->getFullPath());
+            if (!$r) {
+                throw new Exception("Unable to copy {$src->getFullPath()} to " . $this->getFullPath());
+            }
+            $src->convertToPlaceholder();
+        } else {
+            $zip = new ZipArchive();
+            $r = $zip->open($this->getFullPath(), ZipArchive::CREATE);
+            if ($r !== true) {
+                throw new Exception("Unable to create zip file at " . $this->getFullPath());
+            }
 
-			foreach ($files as $file) {
-				$file->downloadFromCloud();
-				$zip->addFile($file->getFullPath(), $file->Name);
-			}
+            foreach ($files as $file) {
+                $file->downloadFromCloud();
+                $zip->addFile($file->getFullPath(), $file->Name);
+            }
 
-			$zip->close();
+            $zip->close();
 
-			// we have to wait until now to restore the files to placeholder
-			foreach ($files as $file) {
-				$file->convertToPlaceholder();
-			}
-		}
+            // we have to wait until now to restore the files to placeholder
+            foreach ($files as $file) {
+                $file->convertToPlaceholder();
+            }
+        }
 
-		// Change to complete
-		$this->ProcessingState = self::COMPLETE;
-		$this->write();
-	}
-
+        // Change to complete
+        $this->ProcessingState = self::COMPLETE;
+        $this->write();
+    }
 }
