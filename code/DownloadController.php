@@ -213,7 +213,8 @@ class DownloadController extends Page_Controller
 
         // Create an empty DownloadTempFile
         $parent = Folder::find_or_make(Config::inst()->get('Downloadable', 'zip_folder'));
-        $dl = new DownloadTempFile();
+        /** @var DownloadTempFile $dl */
+        $dl = DownloadTempFile::create();
         $dl->setParentID($parent->ID);
         $dl->Title = sha1(uniqid());
         $dl->Name = $dl->Title . '.' . (count($files)==1 ? $files[0]->getExtension() : 'zip');
@@ -242,7 +243,7 @@ class DownloadController extends Page_Controller
         }
 
         if (!$crunchingPage || !$crunchingPage->exists()) {
-            $crunchingPage = new Page();
+            $crunchingPage = Page::create();
             $crunchingPage->Title = _t('Downloadable.CRUNCHINGTITLE', 'Processing Your Download');
             $crunchingPage->Content = _t('Downloadable.CRUNCHINGBODY', '<p>Please wait while your download is prepared.</p>');
         }
@@ -273,7 +274,8 @@ class DownloadController extends Page_Controller
         if (is_object($orderID)) {
             $orderID = $orderID->ID;
         }
-        $log = new DownloadLog;
+        /** @var DownloadLog $log */
+        $log = DownloadLog::create();
         $log->URL = $this->getRequest()->getURL();
         $log->OrderID = $orderID;
         if ($tempFile) {
