@@ -63,7 +63,7 @@ class DownloadController extends Page_Controller
             $this->httpError(404);
         }
         $file = DownloadTempFile::get()->byID($id);
-        if (!$file || !$file->exists()) {
+        if (!$file || !$file->ID) {
             $this->httpError(404);
         }
 
@@ -215,9 +215,9 @@ class DownloadController extends Page_Controller
         $parent = Folder::find_or_make(Config::inst()->get('Downloadable', 'zip_folder'));
         /** @var DownloadTempFile $dl */
         $dl = DownloadTempFile::create();
-        $dl->setParentID($parent->ID);
         $dl->Title = sha1(uniqid());
         $dl->Name = $dl->Title . '.' . (count($files)==1 ? $files[0]->getExtension() : 'zip');
+        $dl->setParentID($parent->ID);
         $dl->write();
 
         foreach ($files as $file) {
