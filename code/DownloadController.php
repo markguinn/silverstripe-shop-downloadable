@@ -62,6 +62,8 @@ class DownloadController extends Page_Controller
         if (!$id) {
             $this->httpError(404);
         }
+
+        /** @var DownloadTempFile $file */
         $file = DownloadTempFile::get()->byID($id);
         if (!$file || !$file->ID) {
             $this->httpError(404);
@@ -75,7 +77,7 @@ class DownloadController extends Page_Controller
                 // in the background and in the meantime we refreshed or something
                 // so just send them the file.
                 $this->addToLog(Session::get('DownloadableProcessingOrderID'), $file->SourceFiles(), $file);
-                return $this->sendTempFile($file);
+                return $this->displayDownloadPage($file);
             break;
 
             case DownloadTempFile::ACTIVE:
@@ -89,10 +91,14 @@ class DownloadController extends Page_Controller
                 // otherwise fall through and restart processing
 
             case DownloadTempFile::PENDING:
-                ini_set('max_execution_time', 0);
-                $file->process();
-                $this->addToLog(Session::get('DownloadableProcessingOrderID'), $file->SourceFiles(), $file);
-                return $this->sendTempFile($file);
+                if (!interface_exists('QueuedJob')) {
+                    ini_set('max_execution_time', 0);
+                    $file->process();
+                    $this->addToLog(Session::get('DownloadableProcessingOrderID'), $file->SourceFiles(), $file);
+                    return $this->sendTempFile($file);
+                } else {
+                    return $this->displayCrunchingPage($file);
+                }
         }
     }
 
@@ -202,7 +208,7 @@ class DownloadController extends Page_Controller
         if ($existingFile && $existingFile->exists()) {
             if ($existingFile->ProcessingState === DownloadTempFile::COMPLETE) {
                 $this->addToLog($orderID, $files, $existingFile);
-                return $this->sendTempFile($existingFile);
+                return $this->displayDownloadPage($existingFile);
             } else {
                 return $this->displayCrunchingPage($existingFile);
             }
@@ -225,6 +231,12 @@ class DownloadController extends Page_Controller
         }
         $dl->updateFileKey();
         $dl->write();
+
+        // If we've got a worker queue, use that
+        if (interface_exists('QueuedJob')) {
+            $job = new FilePrepQueuedJob($dl);
+            $job->triggerProcessing();
+        }
 
         // Display the "crunching" page so the user isn't left wondering what's going on
         return $this->displayCrunchingPage($dl);
@@ -258,6 +270,37 @@ class DownloadController extends Page_Controller
 
         // And....render
         return $this->customise($crunchingPage)->renderWith(array('CrunchingPage', 'Page', 'Page'));
+    }
+
+
+    /**
+     * @param DownloadTempFile $dl
+     * @return HTMLText
+     */
+    protected function displayDownloadPage(DownloadTempFile $dl)
+    {
+        $downloadPage = Config::inst()->get('Downloadable', 'download_page');
+        if ($downloadPage) {
+            $downloadPage = SiteTree::get_by_link($downloadPage);
+        }
+
+        if (!$downloadPage || !$downloadPage->exists()) {
+            return $this->sendTempFile($dl);
+        } else {
+            $dl->LastUsedAt = date('Y-m-d H:i:s');
+            $dl->write();
+        }
+
+        // Just in case
+        $this->dataRecord = $downloadPage;
+
+        // Add a meta tag that will refresh with the request that actually does the processing
+        // In the future this could be wrapped in a <noscript> and we could do some better ajax
+        // work to make this more userfriendly (such as a progress bar for multiple files, etc)
+        Requirements::insertHeadTags('<meta http-equiv="refresh" content="1; url=' . $dl->Link() . '">');
+
+        // And....render
+        return $this->customise($downloadPage)->renderWith(array('DownloadPage', 'Page', 'Page'));
     }
 
 

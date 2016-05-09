@@ -31,6 +31,9 @@ class Downloadable extends DataExtension
     /** @var string - url segment/path of a page to display instead of the default while copying/zipping files */
     private static $crunching_page      = '';
 
+    /** @var string - url segment/path of a page to display while downloading */
+    private static $download_page       = '';
+
     /** @var int - how many minutes before crunching is restarted on a zip file */
     private static $crunching_zombie_window = 5;
 
