@@ -77,6 +77,11 @@ class DownloadController extends Page_Controller
                 // in the background and in the meantime we refreshed or something
                 // so just send them the file.
                 $this->addToLog(Session::get('DownloadableProcessingOrderID'), $file->SourceFiles(), $file);
+                if (class_exists('CloudFileExtension')) {
+                    if ($file instanceof CloudDownloadTempFile && $file->Status !== 'Live') {
+                        return $this->displayCrunchingPage($file);
+                    }
+                }
                 return $this->displayDownloadPage($file);
             break;
 
