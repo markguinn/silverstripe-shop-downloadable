@@ -24,9 +24,11 @@ class FilePrepQueuedJob extends AbstractQueuedJob implements QueuedJob
     /**
      * @param DownloadTempFile $object
      */
-    public function __construct($object)
+    public function __construct($object = null)
     {
-        $this->setObject($object);
+        if ($object) {
+            $this->setObject($object);
+        }
     }
 
 
@@ -56,7 +58,7 @@ class FilePrepQueuedJob extends AbstractQueuedJob implements QueuedJob
     public function process()
     {
         ini_set('memory_limit', '1G');
-        
+
         /** @var DownloadTempFile $obj */
         $obj = $this->getObject();
         $obj->process();
